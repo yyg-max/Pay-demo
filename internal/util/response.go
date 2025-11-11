@@ -1,4 +1,4 @@
-package utils
+package util
 
 // Response 通用响应体
 type Response[T any] struct {

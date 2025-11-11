@@ -22,20 +22,9 @@
  * SOFTWARE.
  */
 
-package health
+package merchant
 
-import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
-	"github.com/linux-do/pay/internal/util"
+const (
+	APIKeyNotFound   = "API Key 不存在"
+	NoFieldsToUpdate = "没有需要更新的字段"
 )
-
-// Health godoc
-// @Tags health
-// @Produce json
-// @Success 200 {object} util.ResponseAny
-// @Router /api/v1/health [get]
-func Health(c *gin.Context) {
-	c.JSON(http.StatusOK, util.OKNil())
-}

@@ -35,6 +35,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/linux-do/pay/docs"
 	"github.com/linux-do/pay/internal/apps/health"
+	"github.com/linux-do/pay/internal/apps/merchant"
 	"github.com/linux-do/pay/internal/apps/oauth"
 	"github.com/linux-do/pay/internal/apps/order"
 	"github.com/linux-do/pay/internal/config"
@@ -106,7 +107,23 @@ func Serve() {
 			orderRouter := apiV1Router.Group("/order")
 			orderRouter.Use(oauth.LoginRequired())
 			{
-				orderRouter.POST("/transactions", order.TransactionList)
+				orderRouter.POST("/transactions", order.ListTransactions)
+			}
+
+			// Merchant
+			merchantRouter := apiV1Router.Group("/merchant")
+			merchantRouter.Use(oauth.LoginRequired())
+			{
+				merchantRouter.POST("/api-keys", merchant.CreateAPIKey)
+				merchantRouter.GET("/api-keys", merchant.ListAPIKeys)
+
+				apiKeyRouter := merchantRouter.Group("/api-keys/:id")
+				apiKeyRouter.Use(merchant.RequireAPIKey())
+				{
+					apiKeyRouter.GET("", merchant.GetAPIKey)
+					apiKeyRouter.PUT("", merchant.UpdateAPIKey)
+					apiKeyRouter.DELETE("", merchant.DeleteAPIKey)
+				}
 			}
 		}
 	}

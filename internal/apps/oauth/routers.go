@@ -34,24 +34,24 @@ import (
 	"github.com/google/uuid"
 	"github.com/linux-do/pay/internal/db"
 	"github.com/linux-do/pay/internal/logger"
-	"github.com/linux-do/pay/internal/utils"
+	"github.com/linux-do/pay/internal/util"
 )
 
 // GetLoginURL godoc
 // @Tags oauth
 // @Produce json
-// @Success 200 {object} utils.ResponseAny
+// @Success 200 {object} util.ResponseAny
 // @Router /api/v1/oauth/login [get]
 func GetLoginURL(c *gin.Context) {
 	// 存储 State 到缓存
 	state := uuid.NewString()
 	cmd := db.Redis.Set(c.Request.Context(), fmt.Sprintf(OAuthStateCacheKeyFormat, state), state, OAuthStateCacheKeyExpiration)
 	if cmd.Err() != nil {
-		c.JSON(http.StatusInternalServerError, utils.Err(cmd.Err().Error()))
+		c.JSON(http.StatusInternalServerError, util.Err(cmd.Err().Error()))
 		return
 	}
 	// 构造登录 URL
-	c.JSON(http.StatusOK, utils.OK(oauthConf.AuthCodeURL(state)))
+	c.JSON(http.StatusOK, util.OK(oauthConf.AuthCodeURL(state)))
 }
 
 type CallbackRequest struct {
@@ -63,26 +63,26 @@ type CallbackRequest struct {
 // @Tags oauth
 // @Param request body CallbackRequest true "request body"
 // @Produce json
-// @Success 200 {object} utils.ResponseAny
+// @Success 200 {object} util.ResponseAny
 // @Router /api/v1/oauth/callback [post]
 func Callback(c *gin.Context) {
 	// init req
 	var req CallbackRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, utils.Err(err.Error()))
+		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
 		return
 	}
 	// check state
 	cmd := db.Redis.Get(c.Request.Context(), fmt.Sprintf(OAuthStateCacheKeyFormat, req.State))
 	if cmd.Val() != req.State {
-		c.JSON(http.StatusBadRequest, utils.Err(InvalidState))
+		c.JSON(http.StatusBadRequest, util.Err(InvalidState))
 		return
 	}
 	db.Redis.Del(c.Request.Context(), fmt.Sprintf(OAuthStateCacheKeyFormat, req.State))
 	// do oauth
 	user, err := doOAuth(c.Request.Context(), req.Code)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, utils.Err(err.Error()))
+		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		return
 	}
 	// bind to session
@@ -90,11 +90,11 @@ func Callback(c *gin.Context) {
 	session.Set(UserIDKey, user.ID)
 	session.Set(UserNameKey, user.Username)
 	if err := session.Save(); err != nil {
-		c.JSON(http.StatusInternalServerError, utils.Err(err.Error()))
+		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		return
 	}
 	// response
-	c.JSON(http.StatusOK, utils.OKNil())
+	c.JSON(http.StatusOK, util.OKNil())
 	logger.InfoF(c.Request.Context(), "[OAuthCallback] %d %s", user.ID, user.Username)
 }
 
@@ -115,7 +115,7 @@ type BasicUserInfo struct {
 // UserInfo godoc
 // @Tags oauth
 // @Produce json
-// @Success 200 {object} utils.ResponseAny
+// @Success 200 {object} util.ResponseAny
 // @Router /api/v1/oauth/user-info [get]
 func UserInfo(c *gin.Context) {
 	user, _ := GetUserFromContext(c)
@@ -123,13 +123,13 @@ func UserInfo(c *gin.Context) {
 	var payConfig model.UserPayConfig
 	if err := db.DB(c.Request.Context()).Where("min_score <= ?", user.PayScore).
 		Where("max_score IS NULL OR max_score > ?", user.PayScore).First(&payConfig).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, utils.Err(err.Error()))
+		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		return
 	}
 
 	c.JSON(
 		http.StatusOK,
-		utils.OK(BasicUserInfo{
+		util.OK(BasicUserInfo{
 			ID:               user.ID,
 			Username:         user.Username,
 			Nickname:         user.Nickname,
@@ -148,14 +148,14 @@ func UserInfo(c *gin.Context) {
 // Logout godoc
 // @Tags oauth
 // @Produce json
-// @Success 200 {object} utils.ResponseAny
+// @Success 200 {object} util.ResponseAny
 // @Router /api/v1/oauth/logout [get]
 func Logout(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Clear()
 	if err := session.Save(); err != nil {
-		c.JSON(http.StatusInternalServerError, utils.Err(err.Error()))
+		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, utils.OKNil())
+	c.JSON(http.StatusOK, util.OKNil())
 }

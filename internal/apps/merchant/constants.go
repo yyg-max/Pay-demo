@@ -22,20 +22,8 @@
  * SOFTWARE.
  */
 
-package health
+package merchant
 
-import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
-	"github.com/linux-do/pay/internal/util"
+const (
+	APIKeyObjKey = "merchant_api_key_obj"
 )
-
-// Health godoc
-// @Tags health
-// @Produce json
-// @Success 200 {object} util.ResponseAny
-// @Router /api/v1/health [get]
-func Health(c *gin.Context) {
-	c.JSON(http.StatusOK, util.OKNil())
-}

@@ -32,7 +32,7 @@ import (
 	"github.com/linux-do/pay/internal/apps/oauth"
 	"github.com/linux-do/pay/internal/db"
 	"github.com/linux-do/pay/internal/model"
-	"github.com/linux-do/pay/internal/utils"
+	"github.com/linux-do/pay/internal/util"
 )
 
 type TransactionListRequest struct {
@@ -51,17 +51,17 @@ type TransactionListResponse struct {
 	Orders   []model.Order `json:"orders"`
 }
 
-// TransactionList
+// ListTransactions 获取交易列表
 // @Tags order
 // @Accept json
 // @Produce json
 // @Param request body TransactionListRequest false "request body"
-// @Success 200 {object} utils.ResponseAny
+// @Success 200 {object} util.ResponseAny
 // @Router /api/v1/order/transactions [post]
-func TransactionList(c *gin.Context) {
+func ListTransactions(c *gin.Context) {
 	var req TransactionListRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, utils.Err(err.Error()))
+		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
 		return
 	}
 
@@ -85,18 +85,18 @@ func TransactionList(c *gin.Context) {
 
 	var total int64
 	if err := baseQuery.Count(&total).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, utils.Err(err.Error()))
+		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		return
 	}
 
 	var orders []model.Order
 	offset := (req.Page - 1) * req.PageSize
 	if err := baseQuery.Order("created_at DESC").Offset(offset).Limit(req.PageSize).Find(&orders).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, utils.Err(err.Error()))
+		c.JSON(http.StatusInternalServerError, util.Err(err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, utils.OK(TransactionListResponse{
+	c.JSON(http.StatusOK, util.OK(TransactionListResponse{
 		Total:    total,
 		Page:     req.Page,
 		PageSize: req.PageSize,

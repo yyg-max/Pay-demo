@@ -24,18 +24,22 @@
 
 package model
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type MerchantAPIKey struct {
-	ID             uint64    `json:"id" gorm:"primaryKey"`
-	UserID         uint64    `json:"user_id" gorm:"not null;index"`
-	ClientID       string    `json:"client_id" gorm:"size:255;unique;index;not null"`
-	ClientSecret   string    `json:"client_secret" gorm:"size:255;not null"`
-	AppName        string    `json:"app_name" gorm:"size:20;not null"`
-	AppHomepageURL string    `json:"app_homepage_url" gorm:"size:100;not null"`
-	AppDescription string    `json:"app_description" gorm:"size:100"`
-	RedirectURI    string    `json:"redirect_uri" gorm:"size:100;not null"`
-	Status         bool      `json:"status" gorm:"default:true;index"`
-	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime;index"`
-	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdateTime;index"`
+	ID             uint64         `json:"id" gorm:"primaryKey"`
+	UserID         uint64         `json:"user_id" gorm:"not null;index:idx_merchant_api_keys_user_created,priority:1"`
+	ClientID       string         `json:"client_id" gorm:"size:64;unique;index;not null"`
+	ClientSecret   string         `json:"client_secret" gorm:"size:64;not null"`
+	AppName        string         `json:"app_name" gorm:"size:20;not null"`
+	AppHomepageURL string         `json:"app_homepage_url" gorm:"size:100;not null"`
+	AppDescription string         `json:"app_description" gorm:"size:100"`
+	RedirectURI    string         `json:"redirect_uri" gorm:"size:100;not null"`
+	CreatedAt      time.Time      `json:"created_at" gorm:"autoCreateTime;index:idx_merchant_api_keys_user_created,priority:2"`
+	UpdatedAt      time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
+	DeletedAt      gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }

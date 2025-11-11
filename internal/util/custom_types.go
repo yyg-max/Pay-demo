@@ -22,48 +22,25 @@
  * SOFTWARE.
  */
 
-package utils
+package util
 
 import (
-	"context"
+	"database/sql/driver"
+	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"time"
 )
 
-// 配置HTTP客户端
-var httpClient = &http.Client{
-	Timeout: 10 * time.Second,
-	Transport: &http.Transport{
-		MaxIdleConns:        100,
-		MaxIdleConnsPerHost: 20,
-		IdleConnTimeout:     60 * time.Second,
-	},
+// StringArray custom type for handling JSON arrays
+type StringArray []string
+
+func (sa *StringArray) Scan(value interface{}) error {
+	bytesValue, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("invalid value: %v", value)
+	}
+	return json.Unmarshal(bytesValue, sa)
 }
 
-func Request(ctx context.Context, method, url string, body io.Reader, headers, cookies map[string]string) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, method, url, body)
-	if err != nil {
-		return nil, fmt.Errorf("创建HTTP请求失败: %w", err)
-	}
-
-	if cookies != nil {
-		for key, value := range cookies {
-			req.AddCookie(&http.Cookie{Name: key, Value: value})
-		}
-	}
-
-	if headers != nil {
-		for key, value := range headers {
-			req.Header.Set(key, value)
-		}
-	}
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("请求%s接口失败: %w", url, err)
-	}
-
-	return resp, nil
+func (sa StringArray) Value() (driver.Value, error) {
+	return json.Marshal(sa)
 }

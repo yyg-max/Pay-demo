@@ -30,6 +30,7 @@ import (
 	"errors"
 	"github.com/linux-do/pay/internal/db"
 	"github.com/linux-do/pay/internal/model"
+	"github.com/linux-do/pay/internal/util"
 	"io"
 	"time"
 
@@ -120,6 +121,7 @@ func doOAuth(ctx context.Context, code string) (*model.User, error) {
 				AvatarUrl:   userInfo.AvatarUrl,
 				IsActive:    userInfo.Active,
 				TrustLevel:  userInfo.TrustLevel,
+				SignKey:     util.GenerateUniqueIDSimple(),
 				LastLoginAt: time.Now(),
 			}
 			tx = db.DB(ctx).Create(&user)

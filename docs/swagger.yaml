@@ -1,4 +1,38 @@
 definitions:
+  merchant.CreateAPIKeyRequest:
+    properties:
+      app_description:
+        maxLength: 100
+        type: string
+      app_homepage_url:
+        maxLength: 100
+        type: string
+      app_name:
+        maxLength: 20
+        type: string
+      redirect_uri:
+        maxLength: 100
+        type: string
+    required:
+    - app_homepage_url
+    - app_name
+    - redirect_uri
+    type: object
+  merchant.UpdateAPIKeyRequest:
+    properties:
+      app_description:
+        maxLength: 100
+        type: string
+      app_homepage_url:
+        maxLength: 100
+        type: string
+      app_name:
+        maxLength: 20
+        type: string
+      redirect_uri:
+        maxLength: 100
+        type: string
+    type: object
   oauth.CallbackRequest:
     properties:
       code:
@@ -25,6 +59,7 @@ definitions:
         - pending
         - failed
         - disputing
+        - refund
         - refunded
         type: string
       type:
@@ -35,7 +70,7 @@ definitions:
         - community
         type: string
     type: object
-  utils.ResponseAny:
+  util.ResponseAny:
     properties:
       data: {}
       error_msg:
@@ -55,9 +90,99 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.ResponseAny'
+            $ref: '#/definitions/util.ResponseAny'
       tags:
       - health
+  /api/v1/merchant/api-keys:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - merchant
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/merchant.CreateAPIKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - merchant
+  /api/v1/merchant/api-keys/{id}:
+    delete:
+      parameters:
+      - description: API Key ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - merchant
+    get:
+      parameters:
+      - description: API Key ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - merchant
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: API Key ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/merchant.UpdateAPIKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - merchant
   /api/v1/oauth/callback:
     post:
       parameters:
@@ -73,7 +198,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.ResponseAny'
+            $ref: '#/definitions/util.ResponseAny'
       tags:
       - oauth
   /api/v1/oauth/login:
@@ -84,7 +209,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.ResponseAny'
+            $ref: '#/definitions/util.ResponseAny'
       tags:
       - oauth
   /api/v1/oauth/logout:
@@ -95,7 +220,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.ResponseAny'
+            $ref: '#/definitions/util.ResponseAny'
       tags:
       - oauth
   /api/v1/oauth/user-info:
@@ -106,7 +231,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.ResponseAny'
+            $ref: '#/definitions/util.ResponseAny'
       tags:
       - oauth
   /api/v1/order/transactions:
@@ -125,7 +250,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.ResponseAny'
+            $ref: '#/definitions/util.ResponseAny'
       tags:
       - order
 swagger: "2.0"

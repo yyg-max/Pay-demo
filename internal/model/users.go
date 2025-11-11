@@ -40,13 +40,13 @@ type OAuthUserInfo struct {
 
 type User struct {
 	ID               uint64     `json:"id" gorm:"primaryKey"`
-	Username         string     `json:"username" gorm:"size:255;unique;index"`
-	Nickname         string     `json:"nickname" gorm:"size:255"`
-	AvatarUrl        string     `json:"avatar_url" gorm:"size:255"`
+	Username         string     `json:"username" gorm:"size:64;unique;index"`
+	Nickname         string     `json:"nickname" gorm:"size:100"`
+	AvatarUrl        string     `json:"avatar_url" gorm:"size:100"`
 	TrustLevel       TrustLevel `json:"trust_level" gorm:"index"`
 	PayScore         int64      `json:"pay_score" gorm:"default:0;index"`
 	PayKey           string     `json:"pay_key" gorm:"size:10;index"`
-	SignKey          string     `json:"sign_key" gorm:"size:128"`
+	SignKey          string     `json:"sign_key" gorm:"size:64;unique;index;not null"`
 	TotalBalance     int64      `json:"total_balance" gorm:"default:0;index"`
 	AvailableBalance int64      `json:"available_balance" gorm:"default:0;index"`
 	IsActive         bool       `json:"is_active" gorm:"default:true"`

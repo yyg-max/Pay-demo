@@ -22,25 +22,25 @@
  * SOFTWARE.
  */
 
-package utils
+package util
 
 import (
-	"database/sql/driver"
-	"encoding/json"
-	"fmt"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
+	"io"
+
+	"github.com/google/uuid"
 )
 
-// StringArray custom type for handling JSON arrays
-type StringArray []string
-
-func (sa *StringArray) Scan(value interface{}) error {
-	bytesValue, ok := value.([]byte)
-	if !ok {
-		return fmt.Errorf("invalid value: %v", value)
+// GenerateUniqueIDSimple 生成 64 位唯一标识符
+func GenerateUniqueIDSimple() string {
+	randomBytes := make([]byte, 32)
+	if _, err := io.ReadFull(rand.Reader, randomBytes); err != nil {
+		// 如果随机数生成失败，使用 UUID 作为后备
+		uuidBytes := []byte(uuid.NewString())
+		hash := sha256.Sum256(uuidBytes)
+		copy(randomBytes, hash[:])
 	}
-	return json.Unmarshal(bytesValue, sa)
-}
-
-func (sa StringArray) Value() (driver.Value, error) {
-	return json.Marshal(sa)
+	return hex.EncodeToString(randomBytes)
 }

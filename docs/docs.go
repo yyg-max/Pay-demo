@@ -27,7 +27,147 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.ResponseAny"
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/merchant/api-keys": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "merchant"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "merchant"
+                ],
+                "parameters": [
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/merchant.CreateAPIKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/merchant/api-keys/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "merchant"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "API Key ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "merchant"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "API Key ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/merchant.UpdateAPIKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "merchant"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "API Key ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ResponseAny"
                         }
                     }
                 }
@@ -56,7 +196,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.ResponseAny"
+                            "$ref": "#/definitions/util.ResponseAny"
                         }
                     }
                 }
@@ -74,7 +214,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.ResponseAny"
+                            "$ref": "#/definitions/util.ResponseAny"
                         }
                     }
                 }
@@ -92,7 +232,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.ResponseAny"
+                            "$ref": "#/definitions/util.ResponseAny"
                         }
                     }
                 }
@@ -110,7 +250,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.ResponseAny"
+                            "$ref": "#/definitions/util.ResponseAny"
                         }
                     }
                 }
@@ -141,7 +281,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.ResponseAny"
+                            "$ref": "#/definitions/util.ResponseAny"
                         }
                     }
                 }
@@ -149,6 +289,53 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "merchant.CreateAPIKeyRequest": {
+            "type": "object",
+            "required": [
+                "app_homepage_url",
+                "app_name",
+                "redirect_uri"
+            ],
+            "properties": {
+                "app_description": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "app_homepage_url": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "app_name": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "redirect_uri": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
+        "merchant.UpdateAPIKeyRequest": {
+            "type": "object",
+            "properties": {
+                "app_description": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "app_homepage_url": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "app_name": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "redirect_uri": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
         "oauth.CallbackRequest": {
             "type": "object",
             "properties": {
@@ -185,6 +372,7 @@ const docTemplate = `{
                         "pending",
                         "failed",
                         "disputing",
+                        "refund",
                         "refunded"
                     ]
                 },
@@ -199,7 +387,7 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.ResponseAny": {
+        "util.ResponseAny": {
             "type": "object",
             "properties": {
                 "data": {},

@@ -22,20 +22,32 @@
  * SOFTWARE.
  */
 
-package health
+package merchant
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/linux-do/pay/internal/apps/oauth"
+	"github.com/linux-do/pay/internal/db"
+	"github.com/linux-do/pay/internal/model"
 	"github.com/linux-do/pay/internal/util"
 )
 
-// Health godoc
-// @Tags health
-// @Produce json
-// @Success 200 {object} util.ResponseAny
-// @Router /api/v1/health [get]
-func Health(c *gin.Context) {
-	c.JSON(http.StatusOK, util.OKNil())
+func RequireAPIKey() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, _ := oauth.GetUserFromContext(c)
+
+		var apiKey model.MerchantAPIKey
+		if err := db.DB(c.Request.Context()).
+			Where("id = ? AND user_id = ?", c.Param("id"), user.ID).
+			First(&apiKey).Error; err != nil {
+			c.AbortWithStatusJSON(http.StatusNotFound, util.Err(APIKeyNotFound))
+			return
+		}
+
+		SetAPIKeyToContext(c, &apiKey)
+
+		c.Next()
+	}
 }
