@@ -33,6 +33,19 @@ definitions:
         maxLength: 100
         type: string
     type: object
+  model.PayLevel:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    format: int32
+    type: integer
+    x-enum-varnames:
+    - PayLevelFree
+    - PayLevelBasic
+    - PayLevelStandard
+    - PayLevelPremium
   oauth.CallbackRequest:
     properties:
       code:
@@ -79,11 +92,70 @@ definitions:
         maxLength: 64
         type: string
       remark:
-        maxLength: 255
+        maxLength: 200
         type: string
     required:
     - amount
     - order_name
+    type: object
+  system_config.CreateSystemConfigRequest:
+    properties:
+      description:
+        maxLength: 255
+        type: string
+      key:
+        maxLength: 64
+        type: string
+      value:
+        maxLength: 255
+        type: string
+    required:
+    - key
+    - value
+    type: object
+  system_config.UpdateSystemConfigRequest:
+    properties:
+      description:
+        maxLength: 255
+        type: string
+      value:
+        maxLength: 255
+        type: string
+    required:
+    - value
+    type: object
+  user_pay_config.CreateUserPayConfigRequest:
+    properties:
+      daily_limit:
+        type: integer
+      fee_rate:
+        type: number
+      level:
+        $ref: '#/definitions/model.PayLevel'
+      max_score:
+        type: integer
+      min_score:
+        minimum: 0
+        type: integer
+    required:
+    - fee_rate
+    - level
+    - min_score
+    type: object
+  user_pay_config.UpdateUserPayConfigRequest:
+    properties:
+      daily_limit:
+        type: integer
+      fee_rate:
+        type: number
+      max_score:
+        type: integer
+      min_score:
+        minimum: 0
+        type: integer
+    required:
+    - fee_rate
+    - min_score
     type: object
   util.ResponseAny:
     properties:
@@ -97,6 +169,180 @@ info:
   title: LINUX DO PAY
   version: 0.1.0
 paths:
+  /api/v1/admin/system-configs:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/system_config.CreateSystemConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/system-configs/{key}:
+    delete:
+      parameters:
+      - description: 配置键
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+    get:
+      parameters:
+      - description: 配置键
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 配置键
+        in: path
+        name: key
+        required: true
+        type: string
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/system_config.UpdateSystemConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/user-pay-configs:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user_pay_config.CreateUserPayConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+  /api/v1/admin/user-pay-configs/{id}:
+    delete:
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+    get:
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user_pay_config.UpdateUserPayConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ResponseAny'
+      tags:
+      - admin
   /api/v1/health:
     get:
       produces:
