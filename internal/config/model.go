@@ -125,9 +125,8 @@ type logConfig struct {
 
 // scheduleConfig 定时任务配置
 type scheduleConfig struct {
-	UserBadgeScoreDispatchIntervalSeconds int    `mapstructure:"user_badge_score_dispatch_interval_seconds"`
-	UpdateUserBadgeScoresTaskCron         string `mapstructure:"update_user_badges_scores_task_cron"`
-	UpdateAllBadgesTaskCron               string `mapstructure:"update_all_badges_task_cron"`
+	UserGamificationScoreDispatchIntervalSeconds int    `mapstructure:"user_gamification_score_dispatch_interval_seconds"`
+	UpdateUserGamificationScoresTaskCron         string `mapstructure:"update_user_gamification_scores_task_cron"`
 }
 
 // workerConfig 工作配置

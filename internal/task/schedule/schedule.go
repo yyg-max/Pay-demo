@@ -26,9 +26,11 @@ package schedule
 
 import (
 	"fmt"
-	"github.com/linux-do/pay/internal/task"
 	"sync"
 	"time"
+
+	"github.com/linux-do/pay/internal/config"
+	"github.com/linux-do/pay/internal/task"
 
 	"github.com/hibiken/asynq"
 )
@@ -58,6 +60,10 @@ func StartScheduler() error {
 				Location: location,
 			},
 		)
+
+		if _, err = scheduler.Register(config.Config.Schedule.UpdateUserGamificationScoresTaskCron, asynq.NewTask(task.UpdateUserGamificationScoresTask, nil)); err != nil {
+			return
+		}
 
 		// 启动调度器
 		err = scheduler.Run()

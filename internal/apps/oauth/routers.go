@@ -109,7 +109,6 @@ type BasicUserInfo struct {
 	TotalPayment     decimal.Decimal  `json:"total_payment"`
 	TotalTransfer    decimal.Decimal  `json:"total_transfer"`
 	TotalCommunity   decimal.Decimal  `json:"total_community"`
-	CommunityBalance decimal.Decimal  `json:"community_balance"`
 	AvailableBalance decimal.Decimal  `json:"available_balance"`
 	PayScore         int64            `json:"pay_score"`
 	IsPayKey         bool             `json:"is_pay_key"`
@@ -145,7 +144,6 @@ func UserInfo(c *gin.Context) {
 			TotalPayment:     user.TotalPayment,
 			TotalTransfer:    user.TotalTransfer,
 			TotalCommunity:   user.TotalCommunity,
-			CommunityBalance: user.CommunityBalance,
 			AvailableBalance: user.AvailableBalance,
 			PayScore:         user.PayScore,
 			IsPayKey:         user.PayKey != "",

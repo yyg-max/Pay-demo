@@ -72,9 +72,8 @@ log:
 
 # Schedule
 schedule:
-  user_badge_score_dispatch_interval_seconds: 1
-  update_user_badges_scores_task_cron: "0 2 * * *"
-  update_all_badges_task_cron: "0 1 * * *"
+  user_gamification_score_dispatch_interval_seconds: 1
+  update_user_gamification_scores_task_cron: "0 2 * * *"
 
 # Worker
 worker:

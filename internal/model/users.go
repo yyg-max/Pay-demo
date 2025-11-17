@@ -25,8 +25,13 @@
 package model
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/linux-do/pay/internal/util"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
@@ -50,6 +55,11 @@ type OAuthUserInfo struct {
 	TrustLevel TrustLevel `json:"trust_level"`
 }
 
+// UserGamificationScoreResponse API响应
+type UserGamificationScoreResponse struct {
+	GamificationScore int64 `json:"gamification_score"`
+}
+
 type User struct {
 	ID               uint64          `json:"id" gorm:"primaryKey"`
 	Username         string          `json:"username" gorm:"size:64;uniqueIndex;index"`
@@ -64,7 +74,6 @@ type User struct {
 	TotalTransfer    decimal.Decimal `json:"total_transfer" gorm:"type:numeric(20,2);default:0"`
 	TotalCommunity   decimal.Decimal `json:"total_community" gorm:"type:numeric(20,2);default:0"`
 	AvailableBalance decimal.Decimal `json:"available_balance" gorm:"type:numeric(20,2);default:0"`
-	CommunityBalance decimal.Decimal `json:"community_balance" gorm:"type:numeric(20,2);default:0"`
 	IsActive         bool            `json:"is_active" gorm:"default:true"`
 	IsAdmin          bool            `json:"is_admin" gorm:"default:false"`
 	LastLoginAt      time.Time       `json:"last_login_at" gorm:"index"`
@@ -77,4 +86,23 @@ func (u *User) Exact(tx *gorm.DB, id uint64) error {
 		return err
 	}
 	return nil
+}
+
+func (u *User) GetUserGamificationScore(ctx context.Context) (*UserGamificationScoreResponse, error) {
+	url := fmt.Sprintf("https://linux.do/u/%s.json", u.Username)
+	resp, err := util.Request(ctx, http.MethodGet, url, nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("获取用户积分失败，状态码: %d", resp.StatusCode)
+	}
+
+	var response UserGamificationScoreResponse
+	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("解析用户积分响应失败: %w", err)
+	}
+	return &response, nil
 }

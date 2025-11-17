@@ -25,10 +25,12 @@
 package worker
 
 import (
+	"time"
+
 	"github.com/hibiken/asynq"
+	"github.com/linux-do/pay/internal/apps/user"
 	"github.com/linux-do/pay/internal/config"
 	"github.com/linux-do/pay/internal/task"
-	"time"
 )
 
 // StartWorker 启动任务处理服务器
@@ -50,6 +52,8 @@ func StartWorker() error {
 	// 注册任务处理器
 	mux := asynq.NewServeMux()
 	mux.Use(taskLoggingMiddleware)
+	mux.HandleFunc(task.UpdateUserGamificationScoresTask, user.HandleUpdateUserGamificationScores)
+	mux.HandleFunc(task.UpdateSingleUserGamificationScoreTask, user.HandleUpdateSingleUserGamificationScore)
 	// 启动服务器
 	return asynqServer.Run(mux)
 }

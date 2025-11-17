@@ -28,11 +28,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/linux-do/pay/internal/db"
-	"github.com/linux-do/pay/internal/model"
-	"github.com/linux-do/pay/internal/util"
 	"io"
 	"time"
+
+	"github.com/hibiken/asynq"
+	"github.com/linux-do/pay/internal/db"
+	"github.com/linux-do/pay/internal/logger"
+	"github.com/linux-do/pay/internal/model"
+	"github.com/linux-do/pay/internal/task"
+	"github.com/linux-do/pay/internal/task/schedule"
+	"github.com/linux-do/pay/internal/util"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -129,16 +134,17 @@ func doOAuth(ctx context.Context, code string) (*model.User, error) {
 				span.SetStatus(codes.Error, tx.Error.Error())
 				return nil, tx.Error
 			}
+
 			// 为新注册用户下发计算徽章分数的任务
-			//payload, _ := json.Marshal(map[string]interface{}{
-			//	"user_id": user.ID,
-			//})
-			//
-			//if _, errTask := schedule.AsynqClient.Enqueue(asynq.NewTask(task.UpdateSingleUserBadgeScoreTask, payload)); errTask != nil {
-			//	logger.ErrorF(ctx, "下发用户[%s]徽章分数计算任务失败: %v", user.Username, errTask)
-			//} else {
-			//	logger.InfoF(ctx, "下发用户[%s]徽章分数计算任务成功", user.Username)
-			//}
+			payload, _ := json.Marshal(map[string]interface{}{
+				"user_id": user.ID,
+			})
+
+			if _, errTask := schedule.AsynqClient.Enqueue(asynq.NewTask(task.UpdateSingleUserGamificationScoreTask, payload)); errTask != nil {
+				logger.ErrorF(ctx, "下发用户[%s]积分计算任务失败: %v", user.Username, errTask)
+			} else {
+				logger.InfoF(ctx, "下发用户[%s]积分计算任务成功", user.Username)
+			}
 		} else {
 			// response failed
 			span.SetStatus(codes.Error, tx.Error.Error())
