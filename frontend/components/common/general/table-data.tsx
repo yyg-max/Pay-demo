@@ -34,6 +34,7 @@ export function TransactionDataTable({ transactions }: { transactions: Order[] }
               <TableHead className="whitespace-nowrap text-center min-w-[100px]">交易双方</TableHead>
               <TableHead className="whitespace-nowrap text-center min-w-[50px]">商户</TableHead>
               <TableHead className="whitespace-nowrap text-center w-[120px]">创建时间</TableHead>
+              <TableHead className="whitespace-nowrap text-center w-[120px]">过期时间</TableHead>
               <TableHead className="whitespace-nowrap text-center w-[120px]">交易时间</TableHead>
               <TableHead className="sticky right-0 whitespace-nowrap text-center bg-background shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] w-[150px]">操作</TableHead>
             </TableRow>
@@ -118,10 +119,12 @@ function TransactionTableRow({ order }: { order: Order }) {
               <div className="space-y-2">
                 <div>
                   <p className="text-xs font-semibold">付款方</p>
+                  <p className="text-xs">ID: {order.payer_user_id}</p>
                   <p className="text-xs">账户: {order.payer_username}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold">收款方</p>
+                  <p className="text-xs">ID: {order.payee_user_id}</p>
                   <p className="text-xs">账户: {order.payee_username}</p>
                 </div>
               </div>
@@ -134,6 +137,9 @@ function TransactionTableRow({ order }: { order: Order }) {
       </TableCell>
       <TableCell className="text-xs text-center py-1">
         {formatDateTime(order.created_at)}
+      </TableCell>
+      <TableCell className="text-xs text-center py-1">
+        {formatDateTime(order.expires_at)}
       </TableCell>
       <TableCell className="text-xs text-center py-1">
         {(order.status === 'success' || order.status === 'refund') ? formatDateTime(order.trade_time) : '-'}

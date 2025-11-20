@@ -20,6 +20,10 @@ export interface Order {
   order_name: string;
   /** 商户订单号 */
   merchant_order_no: string;
+  /** 付款方用户ID */
+  payer_user_id: number;
+  /** 收款方用户ID */
+  payee_user_id: number;
   /** 付款方用户名 */
   payer_username: string;
   /** 收款方用户名 */
@@ -36,6 +40,8 @@ export interface Order {
   client_id: string;
   /** 交易时间 */
   trade_time: string;
+  /** 过期时间 */
+  expires_at: string;
   /** 创建时间 */
   created_at: string;
   /** 更新时间 */
