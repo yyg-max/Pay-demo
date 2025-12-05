@@ -14,7 +14,7 @@ app:
   session_secure: false
   session_http_only: false
   api_prefix: "/api"
-  frontend_pay_url: "http://localhost:3000/pay"
+  frontend_pay_url: "http://localhost:3000/paying"
 
 # OAuth2
 oauth2:
