@@ -33,7 +33,41 @@ import (
 	"github.com/linux-do/pay/internal/db"
 	"github.com/linux-do/pay/internal/model"
 	"github.com/linux-do/pay/internal/util"
+	"github.com/shopspring/decimal"
 )
+
+// CreateOrderRequest 商户创建订单统一请求
+type CreateOrderRequest struct {
+	OrderName       string          `json:"order_name" binding:"required,max=64"`
+	MerchantOrderNo string          `json:"merchant_order_no"`
+	Amount          decimal.Decimal `json:"amount" binding:"required"`
+	Remark          string          `json:"remark" binding:"max=200"`
+	PaymentType     string          `json:"payment_type"`
+}
+
+// EPayRequest 易支付请求
+type EPayRequest struct {
+	ClientID        string          `form:"pid" binding:"required"`
+	OrderName       string          `form:"name" binding:"required,max=64"`
+	MerchantOrderNo string          `form:"out_trade_no" binding:"required"`
+	Amount          decimal.Decimal `form:"money" binding:"required"`
+	NotifyURL       string          `form:"notify_url"`
+	ReturnURL       string          `form:"return_url"`
+	Device          string          `form:"device"`
+	Sign            string          `form:"sign" binding:"required"`
+	PayType         string          `form:"type" binding:"required"`
+	SignType        string          `form:"sign_type"`
+}
+
+// ToCreateOrderRequest 转换为通用创建订单请求
+func (r *EPayRequest) ToCreateOrderRequest() *CreateOrderRequest {
+	return &CreateOrderRequest{
+		OrderName:       r.OrderName,
+		MerchantOrderNo: r.MerchantOrderNo,
+		Amount:          r.Amount,
+		PaymentType:     r.PayType,
+	}
+}
 
 // RequireMerchantAuth 验证商户 ClientID/ClientSecret（Basic Auth）
 func RequireMerchantAuth() gin.HandlerFunc {
@@ -77,7 +111,33 @@ func RequireMerchantAuth() gin.HandlerFunc {
 			return
 		}
 
-		SetAPIKeyToContext(c, &apiKey)
+		util.SetToContext(c, APIKeyObjKey, &apiKey)
+
+		c.Next()
+	}
+}
+
+// RequireSignatureAuth 验证签名
+func RequireSignatureAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		PayType := c.PostForm("type")
+
+		var apiKey model.MerchantAPIKey
+
+		switch PayType {
+		case util.PayTypeEPay:
+			if createOrderReq, err := VerifySignature(c, &apiKey); err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, util.Err(err.Error()))
+				return
+			} else {
+				util.SetToContext(c, CreateOrderRequestKey, createOrderReq)
+			}
+		default:
+			c.AbortWithStatusJSON(http.StatusBadRequest, util.Err("不支持的请求类型"))
+			return
+		}
+
+		util.SetToContext(c, APIKeyObjKey, &apiKey)
 
 		c.Next()
 	}

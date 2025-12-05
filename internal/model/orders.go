@@ -71,6 +71,7 @@ type Order struct {
 	Status          OrderStatus     `json:"status" gorm:"type:varchar(20);not null;index:idx_orders_payee_status_type_created,priority:2;index:idx_orders_payer_status_type_created,priority:2;index:idx_orders_client_status_created,priority:2;index:idx_orders_payer_status_type_trade,priority:2"`
 	Type            OrderType       `json:"type" gorm:"type:varchar(20);not null;index:idx_orders_payee_status_type_created,priority:3;index:idx_orders_payer_status_type_created,priority:3;index:idx_orders_payer_status_type_trade,priority:3"`
 	Remark          string          `json:"remark" gorm:"size:255"`
+	PaymentType     string          `json:"payment_type" gorm:"size:20"`
 	TradeTime       time.Time       `json:"trade_time" gorm:"index:idx_orders_payer_status_type_trade,priority:4"`
 	ExpiresAt       time.Time       `json:"expires_at" gorm:"not null"`
 	CreatedAt       time.Time       `json:"created_at" gorm:"autoCreateTime;index:idx_orders_payee_status_type_created,priority:4;index:idx_orders_payer_status_type_created,priority:4;index:idx_orders_client_status_created,priority:3"`

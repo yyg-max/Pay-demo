@@ -26,6 +26,7 @@ package payment
 
 import (
 	"crypto/subtle"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -34,8 +35,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hibiken/asynq"
 	"github.com/linux-do/pay/internal/apps/oauth"
 	"github.com/linux-do/pay/internal/config"
+	"github.com/linux-do/pay/internal/task"
+	"github.com/linux-do/pay/internal/task/schedule"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linux-do/pay/internal/db"
@@ -45,19 +49,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
-// CreateOrderRequest 商户创建订单请求
-type CreateOrderRequest struct {
-	OrderName string          `json:"order_name" binding:"required,max=64"`
-	Amount    decimal.Decimal `json:"amount" binding:"required"`
-	Remark    string          `json:"remark" binding:"max=200"`
-}
-
-// CreateOrderResponse 创建订单响应
-type CreateOrderResponse struct {
-	OrderID uint64 `json:"order_id"`
-	PayURL  string `json:"pay_url"`
-}
 
 // PayOrderRequest 用户支付订单请求
 type PayOrderRequest struct {
@@ -93,32 +84,14 @@ type TransferRequest struct {
 
 // CreateMerchantOrder 商户创建订单接口
 // @Tags payment
-// @Accept json
+// @Accept x-www-form-urlencoded
 // @Produce json
-// @Param Authorization header string true "Basic {ClientID}:{ClientSecret}"
 // @Param request body CreateOrderRequest true "request body"
 // @Success 200 {object} util.ResponseAny
-// @Router /api/v1/merchant/payment/orders [post]
+// @Router /pay/submit.php [post]
 func CreateMerchantOrder(c *gin.Context) {
-	var req CreateOrderRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, util.Err(err.Error()))
-		return
-	}
-
-	// 验证金额必须大于0
-	if req.Amount.LessThanOrEqual(decimal.Zero) {
-		c.JSON(http.StatusBadRequest, util.Err(AmountMustBeGreaterThanZero))
-		return
-	}
-
-	// 验证小数位数不超过2位
-	if req.Amount.Exponent() < -2 {
-		c.JSON(http.StatusBadRequest, util.Err(AmountDecimalPlacesExceeded))
-		return
-	}
-
-	apiKey, _ := GetAPIKeyFromContext(c)
+	req, _ := util.GetFromContext[*CreateOrderRequest](c, CreateOrderRequestKey)
+	apiKey, _ := util.GetFromContext[*model.MerchantAPIKey](c, APIKeyObjKey)
 
 	// 获取商户用户信息
 	var merchantUser model.User
@@ -134,20 +107,22 @@ func CreateMerchantOrder(c *gin.Context) {
 		return
 	}
 
-	var response CreateOrderResponse
+	var payURL string
 
 	if err := db.DB(c.Request.Context()).Transaction(
 		func(tx *gorm.DB) error {
 			// 创建订单
 			order := model.Order{
-				OrderName:   req.OrderName,
-				ClientID:    apiKey.ClientID,
-				PayeeUserID: merchantUser.ID,
-				Amount:      req.Amount,
-				Status:      model.OrderStatusPending,
-				Type:        model.OrderTypePayment,
-				Remark:      req.Remark,
-				ExpiresAt:   time.Now().Add(time.Duration(expireMinutes) * time.Minute),
+				OrderName:       req.OrderName,
+				ClientID:        apiKey.ClientID,
+				MerchantOrderNo: req.MerchantOrderNo,
+				PayeeUserID:     merchantUser.ID,
+				Amount:          req.Amount,
+				Status:          model.OrderStatusPending,
+				Type:            model.OrderTypePayment,
+				Remark:          req.Remark,
+				PaymentType:     req.PaymentType,
+				ExpiresAt:       time.Now().Add(time.Duration(expireMinutes) * time.Minute),
 			}
 			if err := tx.Create(&order).Error; err != nil {
 				return err
@@ -168,8 +143,7 @@ func CreateMerchantOrder(c *gin.Context) {
 				return fmt.Errorf("failed to set order expire key: %w", errSet)
 			}
 
-			response.OrderID = order.ID
-			response.PayURL = fmt.Sprintf("%s?order_no=%s", config.Config.App.FrontendPayURL, url.QueryEscape(encryptString))
+			payURL = fmt.Sprintf("%s?order_no=%s", config.Config.App.FrontendPayURL, url.QueryEscape(encryptString))
 			return nil
 		},
 	); err != nil {
@@ -177,7 +151,7 @@ func CreateMerchantOrder(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, util.OK(response))
+	c.Redirect(http.StatusFound, payURL)
 }
 
 // GetMerchantOrder 查询支付订单信息接口
@@ -373,6 +347,20 @@ func PayMerchantOrder(c *gin.Context) {
 				log.Printf("[Payment] 删除订单过期key失败: order_id=%d, error=%v", order.ID, err)
 			}
 
+			// 下发商户回调任务
+			notifyPayload, _ := json.Marshal(map[string]interface{}{
+				"order_id":  order.ID,
+				"client_id": order.ClientID,
+			})
+			if _, errTask := schedule.AsynqClient.Enqueue(
+				asynq.NewTask(task.MerchantPaymentNotifyTask, notifyPayload),
+				asynq.Queue("critical"),
+				asynq.MaxRetry(5),
+				asynq.Timeout(30*time.Second),
+			); errTask != nil {
+				return fmt.Errorf("下发商户回调任务失败: %w", errTask)
+			}
+
 			return nil
 		},
 	); err != nil {
@@ -390,9 +378,6 @@ func PayMerchantOrder(c *gin.Context) {
 		}
 		return
 	}
-
-	// 异步回调商户
-	//go notifyMerchant(c.Request.Context(), &order)
 
 	c.JSON(http.StatusOK, util.OKNil())
 }
@@ -421,7 +406,7 @@ func Transfer(c *gin.Context) {
 		return
 	}
 
-	currentUser, _ := oauth.GetUserFromContext(c)
+	currentUser, _ := util.GetFromContext[*model.User](c, oauth.UserObjKey)
 
 	if subtle.ConstantTimeCompare([]byte(currentUser.PayKey), []byte(req.PayKey)) != 1 {
 		c.JSON(http.StatusBadRequest, util.Err(PayKeyIncorrect))

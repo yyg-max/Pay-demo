@@ -29,6 +29,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/linux-do/pay/internal/apps/dispute"
+	"github.com/linux-do/pay/internal/apps/payment"
 	"github.com/linux-do/pay/internal/apps/user"
 	"github.com/linux-do/pay/internal/config"
 	"github.com/linux-do/pay/internal/task"
@@ -57,6 +58,7 @@ func StartWorker() error {
 	mux.HandleFunc(task.UpdateSingleUserGamificationScoreTask, user.HandleUpdateSingleUserGamificationScore)
 	mux.HandleFunc(task.AutoRefundExpiredDisputesTask, dispute.HandleAutoRefundExpiredDisputes)
 	mux.HandleFunc(task.AutoRefundSingleDisputeTask, dispute.HandleAutoRefundSingleDispute)
+	mux.HandleFunc(task.MerchantPaymentNotifyTask, payment.HandleMerchantPaymentNotify)
 	// 启动服务器
 	return asynqServer.Run(mux)
 }

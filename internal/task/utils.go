@@ -26,6 +26,7 @@ package task
 
 import (
 	"fmt"
+
 	"github.com/hibiken/asynq"
 	"github.com/linux-do/pay/internal/config"
 )
