@@ -954,9 +954,11 @@ function TransactionTableRow({ order }: { order: Order }) {
       </TableCell>
       <TableCell className={`
         sticky right-0 whitespace-nowrap text-center shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] py-1 z-10
+        bg-background
+        after:absolute after:inset-0 after:z-[-1] after:content-[''] after:pointer-events-none after:transition-colors
         ${isDisputing
-          ? 'bg-yellow-50 dark:bg-yellow-900/20 group-hover:bg-yellow-100/50 dark:group-hover:bg-yellow-900/30'
-          : 'bg-background group-hover:bg-muted/50'}
+          ? 'after:bg-yellow-50 dark:after:bg-yellow-900/20 group-hover:after:bg-yellow-100/50 dark:group-hover:after:bg-yellow-900/30'
+          : 'group-hover:after:bg-muted/50'}
       `}>
         <OrderDetailDialog order={order} />
 

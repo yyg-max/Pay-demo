@@ -38,9 +38,10 @@ export default function MainLayout({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{
-                    duration: 0.3,
+                    duration: 0.5,
                     ease: "easeOut",
                   }}
+                  className="w-full"
                 >
                   {children}
                 </motion.div>
